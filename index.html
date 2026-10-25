@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Vòng quay kỳ diệu – Lắng nghe và phân biệt d, đ</title>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--red:#e84b5f;--yellow:#ffd65a;--green:#2fa45a;--blue:#5b9eea;--brown:#5b3b18;--shadow:0 8px 0 rgba(91,59,24,.12)}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;font-family:"Mulish",sans-serif;color:var(--brown);background:url('nen.png') center/cover fixed, linear-gradient(135deg,#fffdf5,#e6f9ff);touch-action:manipulation; overflow-x:hidden; overflow-y:auto;}
+button,input{font:inherit; font-family:"Mulish",sans-serif;}
+button{cursor:pointer;touch-action:manipulation; transition: transform 0.1s;}
+button:active{transform:scale(0.95);}
+.hidden{display:none!important}
+
+/* --- HEADER --- */
+.app{min-height:100vh; display:flex; flex-direction:column;}
+.top{background:rgba(255,255,255,0.95);border-bottom:4px solid var(--yellow);padding:10px 20px;display:flex;align-items:center;justify-content:space-between; z-index:10; flex-wrap:wrap; gap:10px;}
+.brand h1{margin:0;color:var(--red);font-size:clamp(20px,2.5vw,35px);font-weight:900; text-transform:uppercase;}
+.top-actions{display:flex;align-items:center;gap:15px;flex-wrap:wrap;}
+.score{padding:6px 20px;border:3px solid #f0bd2b;background:#fff5be;border-radius:20px;font-weight:900;font-size:clamp(18px,2vw,22px); color:#5b3b18;}
+.score span{color:var(--red); font-size: 1.2em;}
+.top-btn{border:3px solid #e6b62e;background:#fff8cf;border-radius:15px;padding:6px 15px;font-weight:900;color:#63430e; font-size:clamp(14px,1.5vw,16px);}
+
+/* --- MÀN HÌNH CHÍNH --- */
+.screen{display:none; flex:1; align-items:center; justify-content:center; padding:10px; min-height:0;}
+.screen.active{display:flex; flex-direction:column;}
+.card-box{background:rgba(255,255,255,0.95);border:5px solid var(--yellow);border-radius:32px;box-shadow:var(--shadow);padding:clamp(15px,3vw,30px);text-align:center; max-width:800px; margin:auto; width:100%;}
+.title-big{font-size:clamp(26px,4vw,45px);color:var(--red);font-weight:900;margin:0 0 10px;}
+.btn-primary{border:4px solid #fff;background:linear-gradient(#43bd70,#2c9955);color:#fff;border-radius:20px;padding:12px 35px;font-weight:900;font-size:clamp(18px, 3vw, 24px);box-shadow:0 8px 0 #217641;margin-top:15px;}
+
+/* --- VÒNG QUAY --- */
+.game-layout{display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; flex:1;}
+.wheel-area{position:relative;width:min(68vh,85vw,600px);height:min(68vh,85vw,600px); margin:0 auto; display:flex; align-items:center; justify-content:center; border-radius:50%; box-shadow: 0 20px 40px rgba(0,0,0,0.25); border: 8px solid var(--yellow); background:#fff; overflow:hidden;}
+.wheel{position:absolute; inset:0; width:100%; height:100%; border-radius:50%; background:url('Vòng Quay.png') center/cover no-repeat; transition:transform 4s cubic-bezier(.12,.74,.18,1);}
+.pointer{position:absolute;z-index:15;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:20px solid transparent;border-right:20px solid transparent;border-top:50px solid var(--red);filter:drop-shadow(0 5px 5px rgba(0,0,0,.3))}
+.spin{position:absolute;z-index:20;width:clamp(75px, 14vw, 100px);height:clamp(75px, 14vw, 100px);border-radius:50%;border:6px solid #fff;background:linear-gradient(#ff6075,#e93450);color:#fff;font-size:clamp(16px,2.5vw,22px);font-weight:900;box-shadow:0 8px 0 #a92236,0 15px 25px rgba(100,20,30,.3); display:flex; align-items:center; justify-content:center; text-align:center; padding:0;}
+.spin:disabled{filter:grayscale(0.5);cursor:not-allowed;}
+
+/* --- TV MODE: OVERLAY THỬ THÁCH --- */
+.tv-overlay{position:fixed; inset:0; background:rgba(255,255,255,0.98); z-index:100; display:none; flex-direction:column; align-items:center; justify-content:center; padding:10px; text-align:center; overflow-y:auto;}
+.tv-overlay.show{display:flex; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+
+.tv-content-wrapper { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; width:100%; max-width:1200px; margin:auto; max-height:100vh;}
+.tv-picture{width:100%; height:25vh; max-height:280px; min-height:120px; display:flex; align-items:center; justify-content:center; margin-bottom:5px;}
+.tv-picture img{max-width:100%; max-height:100%; object-fit:contain; border-radius: 15px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));}
+
+/* Cập nhật style cho âm thanh chờ đoán chữ */
+.listening-icon { font-size:clamp(60px,12vw,120px); filter: drop-shadow(0 10px 15px rgba(91,158,234,0.3)); animation: pulse 1.5s infinite alternate; }
+
+.tv-word{font-size: clamp(30px, 6vw, 65px); font-weight:900; color:var(--brown); letter-spacing:2px; margin-bottom:10px; text-transform: lowercase;}
+.tv-word span.blank{color: #ccc; border-bottom: 6px dashed #ccc; display: inline-block; width: clamp(35px, 6vw, 55px); text-align: center;}
+
+/* --- KÉO THẢ --- */
+.drag-drop-area {display:flex; flex-direction:column; align-items:center; gap:10px;}
+.drop-zone {width:clamp(75px,14vw,110px); height:clamp(75px,14vw,110px); border:6px dashed #a0abb6; border-radius:20px; background:#f0f5fa; display:flex; align-items:center; justify-content:center; font-size:clamp(16px,3vw,22px); font-weight:900; color:#7e8b99; transition:all 0.3s;}
+.drop-zone.highlight {border-color:var(--green); background:#e4f8ea; transform: scale(1.1);}
+.drop-zone img {width:85%; height:85%; object-fit:contain; animation: correctPop .4s ease;}
+.draggable-letters {display:flex; gap:clamp(10px,4vw,30px); justify-content:center;}
+.draggable-card {width:clamp(65px,12vw,95px); height:clamp(85px,16vw,120px); padding:8px; background:#fff; border-radius:15px; cursor:grab; touch-action:none; display:flex; align-items:center; justify-content:center; transition:transform 0.1s; z-index:10;}
+.draggable-card[data-val="d"] { border: 5px solid #e84b5f; box-shadow:0 6px 0 rgba(232,75,95,.3); background:#fff4f5;}
+.draggable-card[data-val="đ"] { border: 5px solid #f0ad4e; box-shadow:0 6px 0 rgba(240,173,78,.3); background:#fffaf2;}
+.draggable-card img {max-width:100%; max-height:100%; pointer-events:none;}
+.draggable-card:active {cursor:grabbing;}
+.draggable-card.dragging {opacity:0.9; z-index:1000;}
+
+/* VÙNG CHỨA NÚT BẤM */
+.action-buttons { width:100%; display:flex; justify-content:center; margin: 10px 0; gap: 15px;}
+.btn-next-tv{border:4px solid #fff;background:linear-gradient(#f0bd2b,#d9a111);color:#fff;border-radius:20px;padding:10px 40px;font-weight:900;font-size:clamp(18px,3vw,26px);box-shadow:0 8px 0 #b38308; display:none; max-width: 300px; width:auto; margin:0; cursor:pointer;}
+
+/* --- STYLE TRƯỜNG TEXT BẰNG ẢNH NỀN KHUNG --- */
+.tv-instruction{
+    font-size:clamp(18px,3.5vw,30px); 
+    font-weight:900; 
+    color:var(--brown); 
+    margin-top: 5px; 
+    padding: 10px 30px; 
+    min-height: clamp(55px, 8vw, 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 40px; 
+    background: #eef8ff url('khung-text.png') center/100% 100% no-repeat; 
+    border: 4px solid transparent; 
+    text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff; 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* --- KẾT QUẢ --- */
+.flowers{display:flex;justify-content:center;gap:clamp(6px,1.5vw,12px);flex-wrap:wrap;margin:20px 0;}
+.flower{width:clamp(40px,8vw,60px);height:clamp(40px,8vw,60px);border-radius:50%;background:#ffd96b;border:4px solid #fff;box-shadow:0 0 0 4px #f2c344;position:relative}
+.flower::before,.flower::after{content:"";position:absolute;inset:12%;border-radius:50%;background:#ff8192}.flower::after{transform:rotate(60deg)}
+
+@keyframes popIn { 0%{transform:scale(0.8); opacity:0;} 100%{transform:scale(1); opacity:1;} }
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+@keyframes correctPop{0%{transform:scale(.5)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.1); opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="brand"><h1>Vòng Quay Tinh Tường</h1></div>
+  <div class="top-actions">
+    <div class="score">Điểm: <span id="score">0</span> / <span id="totalChallenges">12</span></div>
+    <button class="top-btn" id="soundBtn">🔊 Giọng cô & Âm thanh: ĐANG BẬT</button>
+  </div>
+</header>
+
+<section class="screen welcome active" id="welcomeScreen">
+  <div class="card-box">
+    <h2 class="title-big">Vòng Quay Tinh Tường</h2>
+    <div style="display:flex; justify-content:center; gap:20px; margin: 15px 0;">
+        <img src="d.png" style="height:clamp(70px,12vw,100px); border-radius:15px; border:4px solid #e84b5f;" alt="chữ d" onerror="this.style.display='none'">
+        <img src="đ.png" style="height:clamp(70px,12vw,100px); border-radius:15px; border:4px solid #f0ad4e;" alt="chữ đ" onerror="this.style.display='none'">
+    </div>
+    <h3 style="font-size:clamp(16px,2.5vw,22px); color:#2fa45a; padding: 0 10px;">Bé hãy quay kim, lắng nghe cô đọc và đoán chữ nhé! Hình ảnh đã bị giấu đi rồi!</h3>
+    <button class="btn-primary" id="startBtn">Bắt đầu chơi</button>
+  </div>
+</section>
+
+<section class="screen" id="gameScreen">
+  <div class="game-layout">
+    <h2 style="font-size:clamp(16px, 3vw, 28px); color:var(--red); background:#fff; padding:8px 25px; border-radius:40px; border:4px solid var(--yellow); margin-bottom: 15px; box-shadow:var(--shadow); text-align:center;">
+      Bé chạm vào chữ QUAY nhé!
+    </h2>
+    <div class="wheel-area">
+      <div class="pointer" aria-hidden="true"></div>
+      <div class="wheel" id="wheel"></div>
+      <button class="spin" id="spinBtn">QUAY</button>
+    </div>
+  </div>
+</section>
+
+<!-- MÀN HÌNH THỬ THÁCH TV MODE -->
+<div class="tv-overlay" id="tvOverlay">
+    <div class="tv-content-wrapper">
+        <div class="tv-picture" id="tvPicture">
+            <!-- Khu vực hiện ảnh hoặc icon tai nghe nghe ngóng -->
+        </div>
+        
+        <div class="tv-word" id="tvWord">
+            <!-- Chữ bị khuyết -->
+        </div>
+        
+        <div class="drag-drop-area" id="dragDropArea">
+            <div class="drop-zone" id="dropZone">Thả chữ</div>
+            <div class="draggable-letters">
+                <div class="draggable-card" data-val="d" draggable="true">
+                    <img src="d.png" alt="d" onerror="this.outerHTML='<span style=\\'font-size:40px;font-weight:bold;color:#e84b5f\\'>d</span>'">
+                </div>
+                <div class="draggable-card" data-val="đ" draggable="true">
+                    <img src="đ.png" alt="đ" onerror="this.outerHTML='<span style=\\'font-size:40px;font-weight:bold;color:#f0ad4e\\'>đ</span>'">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vùng an toàn cho nút bấm -->
+        <div class="action-buttons">
+            <button class="btn-next-tv" id="nextBtn">Quay tiếp</button>
+        </div>
+
+        <!-- Khung Text Thông Báo Nằm Dưới Cùng -->
+        <div class="tv-instruction" id="tvInstruction">Bé hãy lắng nghe nhé!</div>
+    </div>
+</div>
+
+<section class="screen final" id="finalScreen">
+  <div class="card-box">
+    <h2 class="title-big">Hoan hô bé!</h2>
+    <div class="flowers" id="flowers"></div>
+    <p style="font-size:clamp(18px,3.5vw,26px); font-weight:900; color:var(--blue); margin-bottom:15px;">
+        Bé đã giành được <span id="finalScore" style="color:var(--red); font-size:1.4em;">0</span> bông hoa!
+    </p>
+    <div class="action-buttons" style="margin-top:0;">
+        <button class="btn-primary" id="restartBtn" style="margin-top:0;">Chơi lại từ đầu</button>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+// LIÊN KẾT ÂM THANH
+const sndCorrect = new Audio('true.m4a'); 
+const sndWrong = new Audio('sai.m4a');    
+const sndSpin = new Audio('quay.mp3');    
+sndSpin.loop = true; 
+
+// DANH SÁCH TỪ VỰNG - Đã căn chỉnh chuẩn xác theo Vòng Quay.png
+const ITEMS = [
+  { name: 'phần thưởng', word: '', key: 'thuong', type: 'bonus', targetLetter: '' },
+  { name: 'điện thoại', word: '_iện thoại', key: 'dien-thoai', type: 'word', targetLetter: 'đ' },
+  { name: 'xe đạp', word: 'xe _ạp', key: 'xe-dap', type: 'word', targetLetter: 'đ' },
+  { name: 'đồng hồ', word: '_ồng hồ', key: 'dong-ho', type: 'word', targetLetter: 'đ' },
+  { name: 'đèn lồng', word: '_èn lồng', key: 'den-long', type: 'word', targetLetter: 'đ' },
+  { name: 'quả dừa', word: 'quả _ừa', key: 'qua-dua-2', type: 'word', targetLetter: 'd' },
+  { name: 'mất lượt', word: '', key: 'mat-luot', type: 'penalty', targetLetter: '' },
+  { name: 'cây đa', word: 'cây _a', key: 'cay-da', type: 'word', targetLetter: 'đ' },
+  { name: 'đôi dép', word: 'đôi _ép', key: 'dep', type: 'word', targetLetter: 'đ' }, 
+  { name: 'đu quay', word: '_u quay', key: 'du-quay', type: 'word', targetLetter: 'đ' },
+  { name: 'dưa leo', word: '_ưa leo', key: 'dua-leo', type: 'word', targetLetter: 'd' },
+  { name: 'con dê', word: 'con _ê', key: 'de', type: 'word', targetLetter: 'd' },
+  { name: 'quả dứa', word: 'quả _ứa', key: 'qua-dua', type: 'word', targetLetter: 'd' },
+  { name: 'con diều', word: 'con _iều', key: 'dieu', type: 'word', targetLetter: 'd' }
+];
+
+const DEFAULT_IMAGES = {
+  'thuong': '', 
+  'dien-thoai': 'điện thoại.png',
+  'xe-dap': '9.png',
+  'dong-ho': 'dong ho.png', 
+  'den-long': 'denlong.png',
+  'qua-dua-2': 'dừa_2.png',
+  'mat-luot': '',
+  'cay-da': 'cây đa_2.jpg',
+  'dep': 'dep_2.jpg',
+  'du-quay': '10.png',
+  'dua-leo': 'dưa_2.png',
+  'de': 'dê_2.jpg',
+  'qua-dua': 'dứa_2.jpg',
+  'dieu': 'dieu_2.png'
+};
+
+const wordItems = ITEMS.filter(item => item.type === 'word');
+document.getElementById('totalChallenges').textContent = wordItems.length;
+
+let soundEnabled = true;
+let score = 0;
+let currentRotation = 0;
+let isSpinning = false;
+let isLocked = false; 
+let playedIndices = [];
+let currentItem = null;
+let foundInCurrentTurn = false;
+
+// BIẾN CỜ CHỐNG CHẠM DÍNH THẺ TRÊN SMARTBOARD/IPAD
+let activeTouchCard = null; 
+
+let teacherVoice = null;
+function loadVoices() {
+    const voices = window.speechSynthesis.getVoices();
+    teacherVoice = voices.find(v => v.lang.includes('vi') && (v.name.includes('Female') || v.name.includes('HoaiMy') || v.name.includes('Google'))) 
+                || voices.find(v => v.lang.includes('vi'));
+}
+if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function speak(text) {
+  if (!soundEnabled || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'vi-VN';
+  u.rate = 0.85; 
+  u.pitch = 1.2; 
+  if (teacherVoice) u.voice = teacherVoice;
+  window.speechSynthesis.speak(u);
+}
+
+function playCorrectSound() {
+    if(!soundEnabled) return;
+    sndCorrect.currentTime = 0;
+    sndCorrect.play().catch(() => speak('Bé giỏi quá!'));
+}
+function playWrongSound() {
+    if(!soundEnabled) return;
+    sndWrong.currentTime = 0;
+    sndWrong.play().catch(() => speak('Bé làm lại nhé!'));
+}
+
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+}
+
+// CHUẨN CHUYÊN GIA 2: AUDIO UNLOCK DÀNH CHO APPLE iOS/Safari
+document.getElementById('startBtn').addEventListener('click', () => {
+  if (soundEnabled) {
+      sndCorrect.play().then(() => sndCorrect.pause()).catch(e=>{});
+      sndWrong.play().then(() => sndWrong.pause()).catch(e=>{});
+      sndSpin.play().then(() => sndSpin.pause()).catch(e=>{});
+      if ('speechSynthesis' in window) {
+          let unlockMsg = new SpeechSynthesisUtterance('');
+          window.speechSynthesis.speak(unlockMsg);
+      }
+  }
+  score = 0;
+  currentRotation = 0;
+  isSpinning = false;
+  isLocked = false;
+  foundInCurrentTurn = false;
+  playedIndices = [];
+  activeTouchCard = null;
+  wheelEl.style.transition = 'none';
+  wheelEl.style.transform = 'rotate(0deg)';
+  void wheelEl.offsetWidth;
+  wheelEl.style.transition = 'transform 4s cubic-bezier(.12,.74,.18,1)';
+  document.getElementById('score').textContent = score;
+  showScreen('gameScreen');
+  loadVoices();
+  speak("Bé hãy chạm vào chữ QUAY nhé!");
+});
+
+const wheelEl = document.getElementById('wheel');
+const spinBtn = document.getElementById('spinBtn');
+
+spinBtn.addEventListener('click', () => {
+  if (isSpinning || isLocked) return;
+  
+  if (soundEnabled) {
+      if('speechSynthesis' in window) window.speechSynthesis.resume();
+      sndSpin.currentTime = 0;
+      sndSpin.play().catch(e => console.log("Lỗi tự động phát nhạc vòng quay"));
+  }
+
+  if (playedIndices.length >= ITEMS.length) {
+    sndSpin.pause();
+    endGame();
+    return;
+  }
+  
+  isSpinning = true;
+  spinBtn.disabled = true;
+
+  let unplayed = ITEMS.map((_, i) => i).filter(i => !playedIndices.includes(i));
+  let chosenIdx = unplayed[Math.floor(Math.random() * unplayed.length)];
+  playedIndices.push(chosenIdx);
+  currentItem = ITEMS[chosenIdx];
+
+  // CHUẨN CHUYÊN GIA 1: TOÁN HỌC VÒNG QUAY - KHÔNG LỆCH KIM
+  const totalSectors = ITEMS.length; // 14
+  const angleStep = 360 / totalSectors;
+  
+  // Công tắc điều chỉnh: 'Vòng Quay.png' có các ô vuông vắn ngay góc 12h, để góc bù là 0
+  const WHEEL_OFFSET_DEG = 0; 
+  
+  const initialAngle = (chosenIdx * angleStep) + WHEEL_OFFSET_DEG;
+  const targetAngleMod = (360 - initialAngle) % 360;
+  
+  const currentMod = currentRotation % 360;
+  let diff = targetAngleMod - currentMod;
+  if (diff < 0) diff += 360;
+
+  const extraRotations = 5 * 360; 
+  currentRotation = currentRotation + extraRotations + diff;
+  wheelEl.style.transform = `rotate(${currentRotation}deg)`;
+
+  setTimeout(() => {
+    isSpinning = false;
+    spinBtn.disabled = false;
+    sndSpin.pause(); 
+    handleWheelResult(currentItem);
+  }, 4000);
+});
+
+function handleWheelResult(item) {
+  const tvOverlay = document.getElementById('tvOverlay');
+  tvOverlay.classList.add('show');
+  document.getElementById('nextBtn').style.display = 'none';
+
+  if (item.type === 'bonus') {
+    isLocked = true;
+    score++;
+    document.getElementById('score').textContent = score;
+    
+    document.getElementById('tvInstruction').textContent = `Ô THƯỞNG: CỘNG 1 ĐIỂM!`;
+    document.getElementById('tvInstruction').style.color = '#2ca35a';
+    document.getElementById('tvPicture').innerHTML = `<div style="font-size:clamp(60px,12vw,120px)" aria-label="Hộp quà">⭐</div>`;
+    document.getElementById('tvWord').innerHTML = `Bé được +1 điểm!`;
+    document.getElementById('tvWord').style.animation = 'none';
+    document.getElementById('dragDropArea').style.display = 'none';
+    
+    playCorrectSound(); 
+
+    setTimeout(() => {
+        isLocked = false;
+        document.getElementById('nextBtn').textContent = playedIndices.length >= ITEMS.length ? 'Xem kết quả' : 'Quay tiếp';
+        document.getElementById('nextBtn').style.display = 'block';
+    }, 2000);
+  } else if (item.type === 'penalty') {
+    isLocked = true;
+    
+    document.getElementById('tvInstruction').textContent = `MẤT LƯỢT: KHÔNG CÓ ĐIỂM!`;
+    document.getElementById('tvInstruction').style.color = '#e84b5f';
+    document.getElementById('tvPicture').innerHTML = `<div style="font-size:clamp(60px,12vw,120px)" aria-label="Mất lượt">⏳</div>`;
+    document.getElementById('tvWord').innerHTML = `Lần sau cố gắng nhé!`;
+    document.getElementById('tvWord').style.animation = 'none';
+    document.getElementById('dragDropArea').style.display = 'none';
+    
+    playWrongSound(); 
+
+    setTimeout(() => {
+        isLocked = false;
+        document.getElementById('nextBtn').textContent = playedIndices.length >= ITEMS.length ? 'Xem kết quả' : 'Quay tiếp';
+        document.getElementById('nextBtn').style.display = 'block';
+    }, 2000);
+  } else {
+    setupChallenge(item);
+  }
+}
+
+function setupChallenge(item) {
+  foundInCurrentTurn = false;
+  isLocked = false;
+  activeTouchCard = null;
+  
+  // TÍNH NĂNG ĐÔI TAI TINH TƯỜNG (Giấu hình và chữ, chuyển sang Nghe)
+  document.getElementById('tvInstruction').textContent = 'Bé hãy lắng nghe thật kĩ nhé!';
+  document.getElementById('tvInstruction').style.color = 'var(--blue)';
+  
+  // Hiển thị icon Tai nghe / Loa thay vì Ảnh thật
+  document.getElementById('tvPicture').innerHTML = `<div class="listening-icon">🎧❓</div>`;
+  
+  // Hiển thị dấu hỏi chấm thay vì chữ khuyết
+  document.getElementById('tvWord').innerHTML = `<span class="blank" style="width: 150px; border-bottom: none; letter-spacing: 5px; color: #a0abb6;">???</span>`;
+  document.getElementById('tvWord').style.animation = 'none';
+  
+  document.getElementById('dragDropArea').style.display = 'flex';
+  const dropZone = document.getElementById('dropZone');
+  dropZone.innerHTML = 'Thả chữ';
+  dropZone.style.border = '6px dashed #a0abb6';
+  dropZone.style.background = '#f0f5fa';
+  
+  // Cô giáo AI hướng dẫn trẻ nghe và phân tích từ
+  speak(`Bé hãy nghe thật kĩ! Chọn chữ dờ hay đờ cho từ... ${item.name}`);
+}
+
+/* ===== XỬ LÝ KÉO THẢ ===== */
+const cards = document.querySelectorAll('.draggable-card');
+const dropZone = document.getElementById('dropZone');
+
+// Event cho nền tảng sử dụng chuột (PC, Laptop)
+cards.forEach(card => {
+    card.addEventListener('dragstart', (e) => {
+        if(isLocked || foundInCurrentTurn) return e.preventDefault();
+        e.dataTransfer.setData('text/plain', card.dataset.val);
+        setTimeout(() => card.classList.add('dragging'), 0);
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+});
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    if(!isLocked && !foundInCurrentTurn) dropZone.classList.add('highlight');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('highlight'));
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('highlight');
+    if(isLocked || foundInCurrentTurn) return;
+    const val = e.dataTransfer.getData('text/plain');
+    
+    let droppedElement = Array.from(cards).find(c => c.dataset.val === val);
+    if(droppedElement) checkAnswer(val, droppedElement);
+});
+
+// CHUẨN CHUYÊN GIA 3: Cờ khóa chống kẹt dính trên Cảm ứng (Smartboard / iPad)
+let touchStartX = 0, touchStartY = 0;
+cards.forEach(card => {
+    card.addEventListener('touchstart', (e) => {
+        if (isLocked || foundInCurrentTurn || activeTouchCard) return; 
+        
+        activeTouchCard = card; 
+        const t = e.touches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        card.dataset.dragDx = '0';
+        card.dataset.dragDy = '0';
+        card.classList.add('dragging');
+    }, {passive:false});
+
+    card.addEventListener('touchmove', (e) => {
+        if (activeTouchCard !== card) return; 
+        e.preventDefault();
+        const t = e.touches[0];
+        const dx = t.clientX - touchStartX;
+        const dy = t.clientY - touchStartY;
+        card.dataset.dragDx = String(dx);
+        card.dataset.dragDy = String(dy);
+        card.style.transform = `translate(${dx}px, ${dy}px) scale(1.08)`;
+        
+        const r = dropZone.getBoundingClientRect();
+        const over = t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom;
+        dropZone.classList.toggle('highlight', over);
+    }, {passive:false});
+
+    card.addEventListener('touchend', () => {
+        if (activeTouchCard !== card) return;
+        const dx = Number(card.dataset.dragDx || 0);
+        const dy = Number(card.dataset.dragDy || 0);
+        const r = dropZone.getBoundingClientRect();
+        const cx = touchStartX + dx, cy = touchStartY + dy;
+        const over = cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+        
+        card.classList.remove('dragging');
+        card.style.transform = '';
+        dropZone.classList.remove('highlight');
+        
+        if (over && !isLocked && !foundInCurrentTurn) checkAnswer(card.dataset.val, card);
+        
+        activeTouchCard = null; 
+    });
+    
+    card.addEventListener('touchcancel', () => {
+        if (activeTouchCard === card) {
+            card.classList.remove('dragging');
+            card.style.transform = '';
+            dropZone.classList.remove('highlight');
+            activeTouchCard = null; 
+        }
+    });
+});
+
+function checkAnswer(val, element) {
+    isLocked = true;
+
+    if (val === currentItem.targetLetter) {
+        foundInCurrentTurn = true;
+        score++;
+        document.getElementById('score').textContent = score;
+        
+        const imgSrc = element.querySelector('img').src;
+        dropZone.innerHTML = `<img src="${imgSrc}">`;
+        dropZone.style.border = '6px solid #2ca35a';
+        dropZone.style.background = '#c9f4d7';
+        
+        // TÍNH NĂNG "BÙNG NỔ" PHẦN THƯỞNG: HIỆN ẢNH VÀ CHỮ SAU KHI LÀM ĐÚNG
+        const imgItemUrl = DEFAULT_IMAGES[currentItem.key] || currentItem.key + '.png';
+        const safeName = currentItem.name.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        
+        document.getElementById('tvPicture').innerHTML = `<img src="${imgItemUrl}" alt="${safeName}" style="animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:clamp(24px,4vw,40px);font-weight:900;padding:25px;border-radius:25px;background:#fff3cd;border:5px dashed #f0bd2b; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">${safeName.toUpperCase()}</div>`;
+        
+        document.getElementById('tvWord').innerHTML = currentItem.word.replace('_', `<span style="color:#2ca35a">${currentItem.targetLetter}</span>`);
+        document.getElementById('tvWord').style.animation = 'popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+        document.getElementById('tvInstruction').textContent = 'ĐÚNG RỒI! BÉ GIỎI QUÁ!';
+        document.getElementById('tvInstruction').style.color = '#2ca35a';
+        
+        playCorrectSound(); 
+
+        setTimeout(() => {
+            isLocked = false;
+            document.getElementById('nextBtn').textContent = playedIndices.length >= ITEMS.length ? 'Xem kết quả' : 'Quay tiếp';
+            document.getElementById('nextBtn').style.display = 'block';
+        }, 2000);
+
+    } else {
+        playWrongSound(); 
+        document.getElementById('tvInstruction').textContent = 'Chưa đúng, con nghe lại và thử thẻ kia nhé!';
+        document.getElementById('tvInstruction').style.color = '#e84b5f';
+        
+        dropZone.style.animation = 'none';
+        dropZone.offsetHeight; 
+        dropZone.style.animation = 'shake .35s ease';
+        
+        setTimeout(() => {
+            isLocked = false;
+            document.getElementById('tvInstruction').textContent = 'Bé hãy lắng nghe thật kĩ nhé!';
+            document.getElementById('tvInstruction').style.color = 'var(--brown)';
+        }, 1500);
+    }
+}
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  document.getElementById('tvOverlay').classList.remove('show');
+  
+  if (playedIndices.length >= ITEMS.length) {
+    endGame();
+  }
+});
+
+function endGame() {
+  showScreen('finalScreen');
+  document.getElementById('finalScore').textContent = score;
+  const flowersDiv = document.getElementById('flowers');
+  flowersDiv.innerHTML = '';
+  // Tổng hoa cho phép tối đa = Tổng câu hỏi + 1 câu thưởng
+  const starCount = Math.min(score, wordItems.length + 1); 
+  for (let i = 0; i < starCount; i++) {
+    const fl = document.createElement('div');
+    fl.className = 'flower';
+    flowersDiv.appendChild(fl);
+  }
+  speak(`Bé xuất sắc giành được ${score} bông hoa!`);
+}
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  score = 0;
+  currentRotation = 0;
+  isSpinning = false;
+  isLocked = false;
+  playedIndices = [];
+  activeTouchCard = null; 
+  wheelEl.style.transition = 'none';
+  wheelEl.style.transform = 'rotate(0deg)';
+  void wheelEl.offsetWidth;
+  wheelEl.style.transition = 'transform 4s cubic-bezier(.12,.74,.18,1)';
+  document.getElementById('score').textContent = score;
+  showScreen('welcomeScreen');
+});
+
+const soundBtn = document.getElementById('soundBtn');
+soundBtn.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  soundBtn.textContent = soundEnabled ? '🔊 Giọng cô & Âm thanh: ĐANG BẬT' : '🔇 Giọng cô & Âm thanh: ĐANG TẮT';
+  if (!soundEnabled) {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      sndSpin.pause();
+  }
+});
+</script>
+</body>
+</html>

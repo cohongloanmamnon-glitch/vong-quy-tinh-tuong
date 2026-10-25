@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Vòng quay kỳ diệu – Bé khám phá chữ đ</title>
+<!-- Nhúng phông chữ Lexend chuẩn mầm non -->
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--red:#e84b5f;--yellow:#ffd65a;--green:#2fa45a;--blue:#5b9eea;--brown:#5b3b18;--cream:#fff9e9;--pink:#ffe8ee;--shadow:0 8px 0 rgba(91,59,24,.12)}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;font-family:"Lexend",sans-serif;color:var(--brown);background:linear-gradient(135deg,#fff5c9,#e4f8ff 52%,#ffe8ef);touch-action:manipulation}
+body{overflow:auto}
+button,input{font:inherit}
+button{cursor:pointer;touch-action:manipulation}
+.hidden{display:none!important}
+.app{min-height:100vh;padding:10px;display:flex;flex-direction:column;gap:10px}
+.top{background:#fff;border:4px solid var(--yellow);border-radius:24px;box-shadow:var(--shadow);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand h1{margin:0;color:var(--red);font-size:clamp(23px,3.1vw,40px);line-height:1.05;text-transform:lowercase}.brand p{margin:4px 0 0;font-size:clamp(13px,1.7vw,19px);font-weight:800}.top-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.score{padding:8px 13px;border:3px solid #f0bd2b;background:#fff5be;border-radius:17px;font-weight:900;font-size:clamp(16px,2vw,23px)}.score span{color:var(--red)}.top-btn{border:3px solid #e6b62e;background:#fff8cf;border-radius:15px;padding:9px 12px;font-weight:900;color:#63430e}.top-btn:hover{transform:translateY(-1px)}
+.screen{display:none;flex:1;min-height:calc(100vh - 110px)}.screen.active{display:flex}
+.welcome{align-items:center;justify-content:center;padding:12px}.welcome-card{width:min(900px,96vw);background:#fff;border:5px solid var(--yellow);border-radius:32px;box-shadow:0 15px 0 rgba(91,59,24,.12);padding:clamp(20px,4vw,45px);text-align:center}.welcome-title{font-size:clamp(30px,5vw,58px);color:var(--red);font-weight:900;margin:0 0 10px}.welcome-sub{font-size:clamp(19px,2.6vw,30px);font-weight:800;margin:10px auto;max-width:720px}.target-big{display:inline-flex;width:90px;height:90px;align-items:center;justify-content:center;border-radius:25px;background:#fff3bd;border:5px solid var(--yellow);font-size:65px;font-weight:900;color:#8b4c0c;margin:10px}.start-btn,.next-btn,.finish-btn{border:4px solid #fff;background:linear-gradient(#43bd70,#2c9955);color:#fff;border-radius:20px;padding:14px 30px;font-weight:900;font-size:clamp(19px,2.5vw,28px);box-shadow:0 7px 0 #217641;margin-top:15px}.teacher-tip{margin:15px auto 0;padding:12px 15px;background:#eef8ff;border:3px solid #a9d5ff;border-radius:18px;font-weight:800;max-width:760px;font-size:clamp(14px,1.8vw,19px)}
+.game-grid{display:grid;grid-template-columns:minmax(390px,1.1fr) minmax(360px,.9fr);gap:12px;width:100%;min-height:0}.card{background:rgba(255,255,255,.96);border:4px solid var(--yellow);border-radius:28px;box-shadow:var(--shadow);min-height:0}.wheel-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;overflow:hidden}.instruction{background:var(--red);color:#fff;border-radius:17px;padding:9px 15px;font-weight:900;text-align:center;font-size:clamp(15px,1.8vw,21px);width:min(720px,94%)}.wheel-area{position:relative;width:min(69vh,70vw,610px);height:min(69vh,70vw,610px);aspect-ratio:1;margin:8px auto 0;display:flex;align-items:center;justify-content:center}
+
+/* Vòng quay dùng ảnh vong 14.png làm nền */
+.wheel{
+  position:relative;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  background:url('vong 14.png') center/cover no-repeat;
+  box-shadow:0 14px 22px rgba(80,50,20,.25);
+  transition:transform 4s cubic-bezier(.12,.74,.18,1);
+}
+
+.pointer{position:absolute;z-index:15;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-top:52px solid var(--red);filter:drop-shadow(0 4px 4px rgba(0,0,0,.3))}.pointer::after{content:"";position:absolute;left:-8px;top:-46px;width:16px;height:16px;border-radius:50%;background:#ffe26b;border:3px solid #fff}
+.spin{position:absolute;z-index:20;width:clamp(85px,11vh,110px);height:clamp(85px,11vh,110px);border-radius:50%;border:5px solid #fff;background:linear-gradient(#ff6075,#e93450);color:#fff;font-size:clamp(16px,2vw,22px);font-weight:900;box-shadow:0 8px 0 #a92236,0 13px 18px rgba(100,20,30,.28)}.spin:active{transform:translateY(4px);box-shadow:0 4px 0 #a92236}.spin:disabled{filter:grayscale(.45);cursor:not-allowed}
+.challenge{padding:14px;display:flex;flex-direction:column;overflow:auto}.challenge h2{margin:0;text-align:center;color:var(--red);font-size:clamp(21px,2.6vw,32px)}.stage{text-align:center;margin:3px 0 6px;font-size:14px;font-weight:800;color:#6c511f}.picture{width:min(300px,54vw);height:min(220px,28vh);margin:3px auto 8px;border:4px solid var(--yellow);border-radius:23px;background:#fffaf0;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 18px rgba(255,190,50,.18)}.picture img{width:100%;height:100%;object-fit:contain}.picture .missing{font-weight:800;text-align:center;padding:20px;color:#8a6325}.word-title{font-size:clamp(25px,3vw,40px);font-weight:900;text-align:center;margin:1px 0 5px;letter-spacing:.5px}.prompt{background:#fff4bf;border:3px solid var(--yellow);border-radius:16px;padding:8px 10px;text-align:center;font-size:clamp(14px,1.75vw,19px);font-weight:800}.letters{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:7px;margin:11px 0 6px}.letter{min-width:49px;height:60px;padding:3px 10px;border:4px solid #e9c65c;background:#fff;border-radius:15px;color:#54310b;font-size:clamp(25px,3vw,37px);font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 rgba(160,94,4,.13);touch-action:manipulation;cursor:pointer}.letter.space{min-width:15px;width:15px;border:0;background:transparent;box-shadow:none;cursor:default}.letter.correct{background:#c9f4d7;border-color:#2ca35a;color:#14783b;animation:correctPop .35s ease}.letter.wrong{background:#ffdadd;border-color:#e84b5f;animation:shake .35s ease}.feedback{min-height:46px;border-radius:16px;text-align:center;padding:8px;font-size:clamp(14px,1.7vw,19px);font-weight:900}.feedback.good{background:#e4f8ea;color:#17723a}.feedback.help{background:#fff2e1;color:#895a18}.next-btn{align-self:center;font-size:clamp(16px,2vw,21px);padding:11px 22px;margin-top:6px}.small-note{text-align:center;font-size:12px;font-weight:800;opacity:.62;margin-top:auto;padding-top:6px}
+.final{align-items:center;justify-content:center;padding:15px}.final-card{width:min(850px,96vw);background:#fff;border:5px solid var(--yellow);border-radius:32px;box-shadow:0 15px 0 rgba(91,59,24,.12);padding:30px;text-align:center}.final-card h2{font-size:clamp(30px,5vw,52px);color:var(--red);margin:0 0 8px}.flowers{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:15px 0}.flower{width:54px;height:54px;border-radius:50%;background:#ffd96b;border:4px solid #fff;box-shadow:0 0 0 3px #f2c344;position:relative}.flower::before,.flower::after{content:"";position:absolute;inset:12px;border-radius:50%;background:#ff8192}.flower::after{transform:rotate(60deg)}.final-score{font-size:clamp(20px,3vw,31px);font-weight:900}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(35,25,15,.58);display:none;align-items:center;justify-content:center;padding:12px}.modal.show{display:flex}.modal-card{width:min(980px,96vw);max-height:94vh;overflow:auto;background:#fffdf5;border:5px solid var(--yellow);border-radius:28px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.28)}.modal-card h2{margin:0 0 5px;color:var(--red);font-size:clamp(25px,3.5vw,40px)}.modal-note{background:#eef8ff;border:3px solid #b6d9ff;border-radius:15px;padding:9px;font-weight:800;margin-bottom:12px}.image-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.image-set{background:#fff;border:3px solid #efd37b;border-radius:17px;padding:8px;text-align:center}.image-set strong{display:block;font-size:16px;margin-bottom:6px}.preview{height:125px;border-radius:13px;background:#fff9e9;border:2px dashed #e5c65e;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:7px}.preview img{width:100%;height:100%;object-fit:contain}.file-input{width:100%;font-size:12px}.modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}.modal-actions button{border:3px solid #fff;border-radius:15px;padding:10px 15px;font-weight:900}.save-images{background:#2fa45a;color:#fff;box-shadow:0 5px 0 #20763d}.close-modal{background:#f0d66f;color:#60430f}
+.script{margin-top:12px;background:#fff3c4;border:3px solid #ffd45a;border-radius:17px;padding:10px;font-size:14px;font-weight:800}.script b{color:var(--red)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}@keyframes correctPop{0%{transform:scale(.75)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+@media (orientation:portrait),(max-width:850px){.game-grid{grid-template-columns:1fr}.wheel-area{width:min(88vw,560px);height:min(88vw,560px)}.picture{height:200px}.image-grid{grid-template-columns:repeat(2,1fr)}.screen.active{min-height:auto}}
+@media (max-width:560px){.top{align-items:flex-start}.brand h1{font-size:22px}.brand p{font-size:12px}.score{font-size:14px;padding:6px 9px}.top-btn{font-size:12px;padding:7px 8px}.image-grid{grid-template-columns:1fr 1fr}.letter{min-width:43px;height:55px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="brand"><h1>vòng quay kỳ diệu</h1><p>bé khám phá chữ <b>đ</b> trong từ</p></div>
+  <div class="top-actions">
+    <div class="score">điểm: <span id="score">0</span>/<span id="totalChallenges">13</span></div>
+    <button class="top-btn" id="imageSetupBtn">cài ảnh minh họa</button>
+    <button class="top-btn" id="soundBtn">giọng cô: bật</button>
+  </div>
+</header>
+
+<section class="screen welcome active" id="welcomeScreen">
+  <div class="welcome-card">
+    <h2 class="welcome-title">cùng cô tìm chữ đ nhé!</h2>
+    <div class="target-big">đ</div>
+    <p class="welcome-sub">con hãy quay vòng quay từ ảnh <b>vòng 14.png</b>, quan sát hình và tìm đúng chữ <b>đ</b> trong từ.</p>
+    <div class="teacher-tip"><b>cô gợi ý:</b> hãy nhìn thật kỹ từng chữ. Khi tìm được chữ <b>đ</b>, con chạm nhẹ vào chữ đó.</div>
+    <button class="start-btn" id="startBtn">bắt đầu trò chơi</button>
+    <div class="script"><b>lời cô:</b> “các con ơi, hôm nay cô có vòng quay kỳ diệu với rất nhiều từ quen thuộc. Chúng mình cùng quay xem vòng quay dừng ở ô nào và tìm chữ đ nhé!”</div>
+  </div>
+</section>
+
+<section class="screen" id="gameScreen">
+  <div class="game-grid">
+    <section class="card wheel-card">
+      <div class="instruction" id="instruction">chạm nút “QUAY” để chọn một hình nhé!</div>
+      <div class="wheel-area">
+        <div class="pointer" aria-hidden="true"></div>
+        <div class="wheel" id="wheel"></div>
+        <button class="spin" id="spinBtn">QUAY<br>NHÉ</button>
+      </div>
+    </section>
+    <section class="card challenge">
+      <h2>nhiệm vụ của bé</h2>
+      <div class="stage" id="stageText">bước 1: quan sát hình</div>
+      <div class="picture" id="picture">
+        <div class="missing">sau khi quay, hình sẽ xuất hiện ở đây</div>
+      </div>
+      <div class="word-title" id="wordTitle">sẵn sàng chưa?</div>
+      <div class="prompt" id="prompt">vòng quay sẽ chọn một hình. Con hãy quan sát và tìm chữ đ trong từ nhé.</div>
+      <div class="letters" id="letters"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn hidden" id="nextBtn">quay tiếp</button>
+      <div class="small-note">chạm nhẹ vào chữ • phù hợp TV, bảng tương tác và máy tính</div>
+    </section>
+  </div>
+</section>
+
+<section class="screen final" id="finalScreen">
+  <div class="final-card">
+    <h2>con đã hoàn thành!</h2>
+    <div class="flowers" id="flowers"></div>
+    <div class="final-score" id="finalScore">con đã tìm đúng 0 lượt</div>
+    <p style="font-size:18px;font-weight:800">cô khen con đã rất chú ý và cố gắng tìm chữ <b>đ</b>.</p>
+    <button class="finish-btn" id="restartBtn">chơi lại</button>
+    <div class="script"><b>lời cô:</b> “cô khen các con! Chữ đ có trong rất nhiều từ thú vị. Về nhà, các con hãy tìm thêm chữ đ xung quanh mình nhé!”</div>
+  </div>
+</section>
+
+<div class="modal" id="imageModal">
+  <div class="modal-card">
+    <h2>cài ảnh minh họa cho thử thách</h2>
+    <div class="modal-note">Cô có thể tùy chỉnh ảnh minh họa phóng to cho từng ô trên vòng quay.</div>
+    <div class="image-grid" id="imageGrid"></div>
+    <div class="modal-actions">
+      <button class="close-modal" id="resetImagesBtn">khôi phục ảnh mẫu</button>
+      <button class="close-modal" id="closeModalBtn">đóng</button>
+      <button class="save-images" id="saveImagesBtn">lưu ảnh</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TARGET_LETTER = 'đ';
+
+// 15 ô trên vòng quay vong 14.png theo chiều kim đồng hồ từ vị trí 12h
+const ITEMS = [
+  { name: 'đu quay', word: 'đu quay', key: 'du-quay', type: 'word' },
+  { name: 'dưa leo', word: 'dưa leo', key: 'dua-leo', type: 'word' },
+  { name: 'dê', word: 'dê', key: 'de', type: 'word' },
+  { name: 'quả dứa', word: 'quả dứa', key: 'qua-dua', type: 'word' },
+  { name: 'diều', word: 'diều', key: 'dieu', type: 'word' },
+  { name: 'dép', word: 'dép', key: 'dep', type: 'word' },
+  { name: 'thêm lượt', word: '', key: 'them-luot', type: 'bonus' },
+  { name: 'điện thoại', word: 'điện thoại', key: 'dien-thoai', type: 'word' },
+  { name: 'xe đạp', word: 'xe đạp', key: 'xe-dap', type: 'word' },
+  { name: 'đồng hồ', word: 'đồng hồ', key: 'dong-ho', type: 'word' },
+  { name: 'đèn lồng', word: 'đèn lồng', key: 'den-long', type: 'word' },
+  { name: 'quả dừa', word: 'quả dừa', key: 'qua-dua-2', type: 'word' },
+  { name: 'mất lượt', word: '', key: 'mat-luot', type: 'penalty' },
+  { name: 'cây đa', word: 'cây đa', key: 'cay-da', type: 'word' },
+  { name: 'cây dù', word: 'cây dù', key: 'cay-du', type: 'word' }
+];
+
+const wordItems = ITEMS.filter(item => item.type === 'word');
+document.getElementById('totalChallenges').textContent = wordItems.length;
+
+const DEFAULT_IMAGES = {};
+
+let customImages = JSON.parse(localStorage.getItem('game_vong14_images') || '{}');
+let soundEnabled = true;
+let score = 0;
+let currentRotation = 0;
+let isSpinning = false;
+let playedIndices = [];
+let currentItem = null;
+let foundInCurrentTurn = false;
+
+function getImage(key) {
+  return customImages[key] || DEFAULT_IMAGES[key] || '';
+}
+
+function speak(text) {
+  if (!soundEnabled || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'vi-VN';
+  u.rate = 0.9;
+  window.speechSynthesis.speak(u);
+}
+
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  score = 0;
+  playedIndices = [];
+  document.getElementById('score').textContent = score;
+  showScreen('gameScreen');
+  speak("Chúng mình cùng quay vòng quay kỳ diệu nào!");
+});
+
+const wheelEl = document.getElementById('wheel');
+const spinBtn = document.getElementById('spinBtn');
+
+spinBtn.addEventListener('click', () => {
+  if (isSpinning) return;
+  if (playedIndices.length >= ITEMS.length) {
+    endGame();
+    return;
+  }
+  
+  isSpinning = true;
+  spinBtn.disabled = true;
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+
+  let unplayed = ITEMS.map((_, i) => i).filter(i => !playedIndices.includes(i));
+  let chosenIdx = unplayed[Math.floor(Math.random() * unplayed.length)];
+  playedIndices.push(chosenIdx);
+  currentItem = ITEMS[chosenIdx];
+
+  const totalSectors = ITEMS.length;
+  const angleStep = 360 / totalSectors;
+  
+  const initialAngle = chosenIdx * angleStep + angleStep / 2;
+  const targetAngleMod = (360 - initialAngle) % 360;
+  
+  const currentMod = currentRotation % 360;
+  let diff = targetAngleMod - currentMod;
+  if (diff < 0) diff += 360;
+
+  const extraRotations = 6 * 360;
+  currentRotation = currentRotation + extraRotations + diff;
+
+  wheelEl.style.transform = `rotate(${currentRotation}deg)`;
+
+  setTimeout(() => {
+    isSpinning = false;
+    spinBtn.disabled = false;
+    handleWheelResult(currentItem);
+  }, 4000);
+});
+
+function handleWheelResult(item) {
+  if (item.type === 'bonus') {
+    score++;
+    document.getElementById('stageText').textContent = `Ô đặc biệt: THÊM LƯỢT!`;
+    const picDiv = document.getElementById('picture');
+    picDiv.innerHTML = `<div class="missing" style="font-size:24px;color:var(--red);">🎉 Chúc mừng! Con được THÊM LƯỢT và +1 điểm thưởng! 🎉</div>`;
+    document.getElementById('wordTitle').textContent = 'Thêm Lượt!';
+    document.getElementById('prompt').innerHTML = `Con thật may mắn! Nhấn <b>"Quay tiếp"</b> để tiếp tục nhé.`;
+    document.getElementById('letters').innerHTML = '';
+    const fb = document.getElementById('feedback');
+    fb.textContent = 'Tuyệt vời! Con nhận được phần thưởng đặc biệt!';
+    fb.className = 'feedback good';
+    document.getElementById('score').textContent = score;
+    speak('Chúc mừng con được thêm lượt!');
+    document.getElementById('nextBtn').textContent = 'quay tiếp';
+    document.getElementById('nextBtn').classList.remove('hidden');
+  } else if (item.type === 'penalty') {
+    document.getElementById('stageText').textContent = `Ô đặc biệt: MẤT LƯỢT!`;
+    const picDiv = document.getElementById('picture');
+    picDiv.innerHTML = `<div class="missing" style="font-size:24px;color:var(--red);">😅 Ôi, con bị MẤT LƯỢT lần này rồi!</div>`;
+    document.getElementById('wordTitle').textContent = 'Mất Lượt!';
+    document.getElementById('prompt').innerHTML = `Không sao cả, con hãy nhấn <b>"Quay tiếp"</b> để gỡ lại nhé!`;
+    document.getElementById('letters').innerHTML = '';
+    const fb = document.getElementById('feedback');
+    fb.textContent = 'Tiếc quá, chúng mình quay lại lần sau nhé!';
+    fb.className = 'feedback help';
+    speak('Ôi, mất lượt rồi, con quay tiếp nhé!');
+    document.getElementById('nextBtn').textContent = 'quay tiếp';
+    document.getElementById('nextBtn').classList.remove('hidden');
+  } else {
+    setupChallenge(item);
+  }
+}
+
+function setupChallenge(item) {
+  foundInCurrentTurn = false;
+  document.getElementById('stageText').textContent = `bé hãy tìm chữ đ trong từ: "${item.name}"`;
+  
+  const picDiv = document.getElementById('picture');
+  const imgUrl = getImage(item.key);
+  if (imgUrl) {
+    picDiv.innerHTML = `<img src="${imgUrl}" alt="${item.name}">`;
+  } else {
+    picDiv.innerHTML = `<div class="missing">Ô <b>${item.name}</b> trên vòng quay</div>`;
+  }
+
+  document.getElementById('wordTitle').textContent = item.word;
+  document.getElementById('prompt').innerHTML = `chạm vào đúng chữ <b>đ</b> trong từ ở dưới nhé!`;
+
+  const lettersDiv = document.getElementById('letters');
+  lettersDiv.innerHTML = '';
+
+  const chars = Array.from(item.word);
+  chars.forEach((char) => {
+    const btn = document.createElement('button');
+    if (char === ' ') {
+      btn.className = 'letter space';
+    } else {
+      btn.className = 'letter';
+      btn.textContent = char;
+      btn.addEventListener('click', () => handleLetterClick(btn, char));
+    }
+    lettersDiv.appendChild(btn);
+  });
+
+  speak(`Bé hãy tìm chữ đờ trong từ ${item.name}`);
+}
+
+function handleLetterClick(btn, char) {
+  if (foundInCurrentTurn) return;
+
+  if (char.toLowerCase() === TARGET_LETTER) {
+    btn.classList.add('correct');
+    foundInCurrentTurn = true;
+    score++;
+    document.getElementById('score').textContent = score;
+
+    const fb = document.getElementById('feedback');
+    fb.textContent = 'Chính xác! Cô khen bé đã tìm đúng chữ đ!';
+    fb.className = 'feedback good';
+
+    speak('Đúng rồi! Cô khen con!');
+
+    if (playedIndices.length >= ITEMS.length) {
+      document.getElementById('nextBtn').textContent = 'xem kết quả';
+    } else {
+      document.getElementById('nextBtn').textContent = 'quay tiếp';
+    }
+    document.getElementById('nextBtn').classList.remove('hidden');
+  } else {
+    btn.classList.add('wrong');
+    const fb = document.getElementById('feedback');
+    fb.textContent = 'Chưa đúng rồi! Con hãy nhìn kỹ và chạm đúng chữ đ nhé!';
+    fb.className = 'feedback help';
+    speak('Chưa đúng rồi, con thử lại nhé!');
+    setTimeout(() => btn.classList.remove('wrong'), 800);
+  }
+}
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (playedIndices.length >= ITEMS.length) {
+    endGame();
+  } else {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('picture').innerHTML = `<div class="missing">sau khi quay, hình sẽ xuất hiện ở đây</div>`;
+    document.getElementById('wordTitle').textContent = 'Sẵn sàng quay!';
+    document.getElementById('prompt').textContent = 'Chạm nút "QUAY" để chọn hình tiếp theo nhé.';
+    document.getElementById('letters').innerHTML = '';
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('stageText').textContent = 'bước 1: quan sát hình';
+  }
+});
+
+function endGame() {
+  showScreen('finalScreen');
+  document.getElementById('finalScore').textContent = `con đã đạt ${score} điểm sau các lượt chơi!`;
+  const flowersDiv = document.getElementById('flowers');
+  flowersDiv.innerHTML = '';
+  const starCount = Math.min(score, 15);
+  for (let i = 0; i < starCount; i++) {
+    const fl = document.createElement('div');
+    fl.className = 'flower';
+    flowersDiv.appendChild(fl);
+  }
+  speak(`Bé xuất sắc hoàn thành trò chơi với số điểm ${score}!`);
+}
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  score = 0;
+  playedIndices = [];
+  document.getElementById('score').textContent = score;
+  showScreen('welcomeScreen');
+});
+
+const soundBtn = document.getElementById('soundBtn');
+soundBtn.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  soundBtn.textContent = soundEnabled ? 'giọng cô: bật' : 'giọng cô: tắt';
+  if (!soundEnabled && 'speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+});
+
+const modal = document.getElementById('imageModal');
+const imageGrid = document.getElementById('imageGrid');
+
+document.getElementById('imageSetupBtn').addEventListener('click', () => {
+  renderImageGrid();
+  modal.classList.add('show');
+});
+
+document.getElementById('closeModalBtn').addEventListener('click', () => {
+  modal.classList.remove('show');
+});
+
+function renderImageGrid() {
+  imageGrid.innerHTML = '';
+  ITEMS.forEach(item => {
+    const box = document.createElement('div');
+    box.className = 'image-set';
+    box.innerHTML = `
+      <strong>${item.name}</strong>
+      <div class="preview"><img src="${getImage(item.key)}" id="prev_${item.key}" alt="${item.name}"></div>
+      <input type="file" class="file-input" accept="image/*" data-key="${item.key}">
+    `;
+    imageGrid.appendChild(box);
+  });
+
+  document.querySelectorAll('.file-input').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const key = e.target.getAttribute('data-key');
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          customImages[key] = evt.target.result;
+          const prevImg = document.getElementById(`prev_${key}`);
+          if (prevImg) prevImg.src = evt.target.result;
+        };
+      reader.readAsDataURL(file);
+      }
+    });
+  });
+}
+
+document.getElementById('saveImagesBtn').addEventListener('click', () => {
+  localStorage.setItem('game_vong14_images', JSON.stringify(customImages));
+  modal.classList.remove('show');
+  alert('Đã lưu ảnh minh họa thành công!');
+});
+
+document.getElementById('resetImagesBtn').addEventListener('click', () => {
+  customImages = {};
+  localStorage.removeItem('game_vong14_images');
+  renderImageGrid();
+  alert('Đã khôi phục bộ ảnh mẫu!');
+});
+</script>
+</body>
+</html>
